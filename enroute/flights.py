@@ -18,6 +18,8 @@ bp = Blueprint("flights", __name__)
 
 load_dotenv()
 
+from datetime import datetime, timezone
+
 
 @bp.route("/")
 @login_required
@@ -34,9 +36,7 @@ def index():
     now = datetime.now(timezone.utc)
 
     for flight in flights:
-        departure_time = flight["departure_time"]
-        if departure_time.tzinfo is None:
-            departure_time = departure_time.replace(tzinfo=timezone.utc)
+        departure_time = flight["departure_time"].replace(tzinfo=timezone.utc)
 
         if departure_time > now:
             upcoming.append(flight)
@@ -53,6 +53,7 @@ def add_flight():
     if request.method == "POST":
         print("Post method")
         flight_number = request.form["flight_number"]
+        flyer_name = request.form["flyer"]
         print("Flight number", flight_number)
 
         aviationstack_api_key = os.getenv("AVIATIONSTACK_API_KEY")
@@ -69,12 +70,10 @@ def add_flight():
                 flight_date = flight_info["flight_date"]
                 departure_airport = flight_info["departure"]["airport"]
                 arrival_airport = flight_info["arrival"]["airport"]
-                departure_utc = datetime.strptime(
-                    flight_info["departure"]["scheduled"], "%Y-%m-%d %H:%M:%S"
-                ).replace(tzinfo=timezone.utc)
-                arrival_utc = datetime.strptime(
-                    flight_info["arrival"]["scheduled"], "%Y-%m-%d %H:%M:%S"
-                ).replace(tzinfo=timezone.utc)
+                departure_time = flight_info["departure"]["scheduled"]
+                arrival_time = flight_info["arrival"]["scheduled"]
+                departure_timezone = flight_info["departure"]["timezone"]
+                arrival_timezone = flight_info["arrival"]["timezone"]
 
                 flight_status = flight_info["flight_status"]
             else:
@@ -87,7 +86,7 @@ def add_flight():
         db = get_db()
         print(f"Adding flight {flight_number} to db")
         db.execute(
-            "INSERT INTO flight (user_id, airline, flight_number, flight_date, departure_airport, arrival_airport, departure_time, arrival_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO flight (user_id, airline, flight_number, flight_date, departure_airport, arrival_airport, departure_time, arrival_time, departure_timezone, arrival_timezone, status, flyer_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 g.user["id"],
                 airline,
@@ -95,9 +94,12 @@ def add_flight():
                 flight_date,
                 departure_airport,
                 arrival_airport,
-                departure_utc,
-                arrival_utc,
+                departure_time,
+                arrival_time,
+                departure_timezone,
+                arrival_timezone,
                 flight_status,
+                flyer_name,
             ),
         )
         db.commit()
