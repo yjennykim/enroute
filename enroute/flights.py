@@ -18,8 +18,6 @@ bp = Blueprint("flights", __name__)
 
 load_dotenv()
 
-from datetime import datetime, timezone
-
 
 @bp.route("/")
 @login_required
@@ -49,12 +47,22 @@ def index():
 @bp.route("/add", methods=["GET", "POST"])
 @login_required
 def add_flight():
-    print("adding flight")
     if request.method == "POST":
-        print("Post method")
         flight_number = request.form["flight_number"]
-        flyer_name = request.form["flyer"]
-        print("Flight number", flight_number)
+        flyer_name = request.form.get("flyer") or g.user["username"]
+        db = get_db()
+
+        existing_flight = db.execute(
+            "SELECT id FROM flight WHERE user_id = ? AND flyer_name = ? AND flight_number = ?",
+            (g.user["id"], flyer_name, flight_number),
+        ).fetchone()
+
+        if existing_flight:
+            flash(
+                f"You already have flight {flight_number} for {flyer_name} saved.",
+                "warning",
+            )
+            return redirect(url_for("flights.index"))
 
         aviationstack_api_key = os.getenv("AVIATIONSTACK_API_KEY")
         url = f"http://api.aviationstack.com/v1/flights?access_key={aviationstack_api_key}&flight_iata={flight_number}"
@@ -74,7 +82,6 @@ def add_flight():
                 arrival_time = flight_info["arrival"]["scheduled"]
                 departure_timezone = flight_info["departure"]["timezone"]
                 arrival_timezone = flight_info["arrival"]["timezone"]
-
                 flight_status = flight_info["flight_status"]
             else:
                 flash("No flight data found.", "error")
@@ -83,7 +90,6 @@ def add_flight():
             flash("Error retrieving flight data from AviationStack.", "error")
             return render_template("flights/add.html")
 
-        db = get_db()
         print(f"Adding flight {flight_number} to db")
         db.execute(
             "INSERT INTO flight (user_id, airline, flight_number, flight_date, departure_airport, arrival_airport, departure_time, arrival_time, departure_timezone, arrival_timezone, status, flyer_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -121,3 +127,13 @@ def delete_flight(id):
 @bp.route("/<int:id>/edit", methods=["GET", "POST"])  # edit a flight
 def edit_flight(id):
     pass
+
+
+def db_get_existing_flight(user_id, flyer_name, flight_number):
+    db = get_db()
+    existing_flight = db.execute(
+        "SELECT id FROM flight WHERE user_id = ? AND flyer_name = ? AND flight_number = ?",
+        (user_id, flyer_name, flight_number),
+    ).fetchone()
+
+    return existing_flight
