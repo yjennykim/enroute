@@ -4,26 +4,30 @@
     <ul>
         {% for flight in upcoming %}
             <li>
-                {{ flight.flyer_name }}
-                {{ flight.flight_number }} 
-                To {{ flight.arrival_airport }}
-                {{ flight.flight_date }} | {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}
+                <a href="{{ url_for('flights.view_flight', id=flight.id) }}">
+                    {{ flight.flyer_name }} - {{ flight.flight_number }}
+                    to {{ flight.arrival_airport }}
+                    {{ flight.flight_date }} | {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}
+                </a>
             </li>
         {% else %}
             <li>No upcoming flights yet. Add one!</li>
         {% endfor %}
+        
     </ul>
+    <a href="{{ url_for('flights.add_flight') }}">Add a flight</a>
 
     <h2>Past Flights</h2>
     <ul>
         {% for flight in past %}
-            <li>{{ flight.airline }} - Flight {{ flight.flight_number }} 
+            <li>
+                {{ flight.flyer_name }}
+                {{ flight.airline }} - Flight {{ flight.flight_number }}
                 ({{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }} - 
-                {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }})</li>
+                {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }})
+            </li>
         {% else %}
             <li>No past flights yet.</li>
         {% endfor %}
     </ul>
-
-    <a href="{{ url_for('flights.add_flight') }}">Add a flight</a>
 {% endblock %}

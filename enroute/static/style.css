@@ -135,3 +135,7 @@ input[type=submit] {
     align-self: start;
     min-width: 10em;
 }
+
+.add-form input, .add-form button {
+    width: 150px;
+}

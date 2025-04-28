@@ -114,9 +114,34 @@ def add_flight():
     return render_template("flights/add.html")
 
 
-@bp.route("/<int:id>")  # view one flight
+@bp.route("/<int:id>")
+@login_required
 def view_flight(id):
-    pass
+    db = get_db()
+    flight = db.execute(
+        "SELECT * FROM flight WHERE id = ? AND user_id = ?", (id, g.user["id"])
+    ).fetchone()
+
+    if flight is None:
+        flash("Flight not found.", "error")
+        return redirect(url_for("flights.index"))
+
+    aviationstack_api_key = os.getenv("AVIATIONSTACK_API_KEY")
+    url = f"http://api.aviationstack.com/v1/flights?access_key={aviationstack_api_key}&flight_iata={flight['flight_number']}"
+    response = requests.get(url)
+
+    live_info = None
+
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            live_info = data["data"][0]
+        else:
+            flash("No live flight data found.", "warning")
+    else:
+        flash("Error retrieving flight data from AviationStack.", "warning")
+
+    return render_template("flights/detail.html", live_info=live_info)
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])  # delete a flight

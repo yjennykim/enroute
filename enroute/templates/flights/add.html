@@ -1,11 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
 <h1>Add Flight</h1>
 
-<form method="post">
-    <label for="flight_number">Flight Number</label>
-    <input name="flight_number" id="flight_number" required>
-    <br>
-    <label for="flyer">Who is flying?</label>
-    <input name="flyer" id="flyer" default="Me" placeholder="Me">
-    <br>
-    <button type="submit">Track Flight</button>
-</form>
+<div class="add-form">
+    <form method="post">
+        <label for="flight_number">Flight Number</label>
+        <input name="flight_number" id="flight_number" required>
+        <br>
+        <label for="flyer">Who is flying?</label>
+        <input name="flyer" id="flyer" default="Me" placeholder="Me">
+        <br>
+        <button type="submit">Track Flight</button>
+    </form>
+</div>
+{% endblock %}

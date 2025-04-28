@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Flight Details</h2>
+
+  {% if live_info %}
+    <p><strong>Status:</strong> {{ live_info.flight_status }}</p>
+    <p><strong>Airline:</strong> {{ live_info.airline.name }}</p>
+    <p><strong>Flight Number</strong> {{ live_info.flight.iata }}</p>
+    <p><strong>Departure:</strong> {{ live_info.departure.airport }} ({{ live_info.departure.scheduled }})</p>
+    <p><strong>Arrival:</strong> {{ live_info.arrival.airport }} ({{ live_info.arrival.scheduled }})</p>
+  {% endif %}
+
+  <a href="{{ url_for('flights.index') }}">Back to flights</a>
+{% endblock %}
