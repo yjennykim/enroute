@@ -18,12 +18,14 @@ CREATE TABLE flight (
   user_id INTEGER NOT NULL,
   airline TEXT NOT NULL,
   flight_number TEXT NOT NULL,
+  flight_date DATE NOT NULL,
   departure_airport TEXT,
   arrival_airport TEXT,
-  departure_time TEXT,
-  arrival_time TEXT,
+  departure_time TIMESTAMP,
+  arrival_time TIMESTAMP,
   status TEXT DEFAULT 'scheduled',
   created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_checked TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES user (id)
 );
+

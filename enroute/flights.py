@@ -8,7 +8,7 @@ from flask import url_for
 from werkzeug.exceptions import abort
 import os
 import requests
-
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from .auth import login_required
@@ -24,9 +24,26 @@ load_dotenv()
 def index():
     db = get_db()
     flights = db.execute(
-        "SELECT * FROM flight WHERE user_id = ?", (g.user["id"],)
+        "SELECT * FROM flight WHERE user_id = ? ORDER BY departure_time ASC",
+        (g.user["id"],),
     ).fetchall()
-    return render_template("flights/index.html", flights=flights)
+
+    upcoming = []
+    past = []
+
+    now = datetime.now(timezone.utc)
+
+    for flight in flights:
+        departure_time = flight["departure_time"]
+        if departure_time.tzinfo is None:
+            departure_time = departure_time.replace(tzinfo=timezone.utc)
+
+        if departure_time > now:
+            upcoming.append(flight)
+        else:
+            past.append(flight)
+
+    return render_template("flights/index.html", upcoming=upcoming, past=past)
 
 
 @bp.route("/add", methods=["GET", "POST"])
@@ -43,13 +60,23 @@ def add_flight():
         response = requests.get(url)
         print("response", response.json())
 
-        # Check if the response is successful
         if response.status_code == 200:
             data = response.json()
             if data.get("data"):
                 # TODO: Add more fields
                 flight_info = data["data"][0]
                 airline = flight_info["airline"]["name"]
+                flight_date = flight_info["flight_date"]
+                departure_airport = flight_info["departure"]["airport"]
+                arrival_airport = flight_info["arrival"]["airport"]
+                departure_utc = datetime.strptime(
+                    flight_info["departure"]["scheduled"], "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=timezone.utc)
+                arrival_utc = datetime.strptime(
+                    flight_info["arrival"]["scheduled"], "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=timezone.utc)
+
+                flight_status = flight_info["flight_status"]
             else:
                 flash("No flight data found.", "error")
                 return render_template("flights/add.html")
@@ -60,8 +87,18 @@ def add_flight():
         db = get_db()
         print(f"Adding flight {flight_number} to db")
         db.execute(
-            "INSERT INTO flight (user_id, airline, flight_number) VALUES (?, ?, ?)",
-            (g.user["id"], airline, flight_number),
+            "INSERT INTO flight (user_id, airline, flight_number, flight_date, departure_airport, arrival_airport, departure_time, arrival_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                g.user["id"],
+                airline,
+                flight_number,
+                flight_date,
+                departure_airport,
+                arrival_airport,
+                departure_utc,
+                arrival_utc,
+                flight_status,
+            ),
         )
         db.commit()
         return redirect(url_for("flights.index"))
