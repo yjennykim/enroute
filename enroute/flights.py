@@ -50,6 +50,7 @@ def add_flight():
     if request.method == "POST":
         flight_number = request.form["flight_number"]
         flyer_name = request.form.get("flyer") or g.user["username"]
+        flight_date = request.form["flight_date"]
         db = get_db()
 
         existing_flight = db.execute(
@@ -65,7 +66,7 @@ def add_flight():
             return redirect(url_for("flights.index"))
 
         aviationstack_api_key = os.getenv("AVIATIONSTACK_API_KEY")
-        url = f"http://api.aviationstack.com/v1/flights?access_key={aviationstack_api_key}&flight_iata={flight_number}"
+        url = f"http://api.aviationstack.com/v1/flights?access_key={aviationstack_api_key}&flight_iata={flight_number}&flight_date={flight_date}&flight_status=scheduled"
         response = requests.get(url)
         print("response", response.json())
 

@@ -139,3 +139,9 @@ input[type=submit] {
 .add-form input, .add-form button {
     width: 150px;
 }
+
+.flight-card {
+    border: 2px solid red;
+    list-style: none;
+    padding: 50px;
+}

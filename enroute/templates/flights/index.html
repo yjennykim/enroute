@@ -3,11 +3,12 @@
     <h2>Upcoming Flights</h2>
     <ul>
         {% for flight in upcoming %}
-            <li>
+            <li class="flight-card">
                 <a href="{{ url_for('flights.view_flight', id=flight.id) }}">
-                    {{ flight.flyer_name }} - {{ flight.flight_number }}
-                    to {{ flight.arrival_airport }}
-                    {{ flight.flight_date }} | {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}
+                    <p>Flight for {{ flight.flyer_name }}</p>
+                    <p>{{ flight.airline }} - Flight {{ flight.flight_number }}</p>
+                    ({{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }} - 
+                    {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }})
                 </a>
             </li>
         {% else %}
@@ -20,9 +21,9 @@
     <h2>Past Flights</h2>
     <ul>
         {% for flight in past %}
-            <li>
-                {{ flight.flyer_name }}
-                {{ flight.airline }} - Flight {{ flight.flight_number }}
+            <li class="flight-card">
+                <p>Flight for {{ flight.flyer_name }}</p>
+                <p>{{ flight.airline }} - Flight {{ flight.flight_number }}</p>
                 ({{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }} - 
                 {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }})
             </li>

@@ -65,12 +65,12 @@ def register():
             try:
                 db.execute(
                     "INSERT INTO user (username, password, email) VALUES (?, ?, ?)",
-                    (username, generate_password_hash(password), "testing@example.com"),
+                    (username, generate_password_hash(password), username),
                 )
                 db.commit()
 
-            except db.IntegrityError:
-                error = f"User {username} is already registered."
+            except db.IntegrityError as e:
+                error = f"User error {e}."
             else:
                 # Success
                 return redirect(url_for("auth.login"))
